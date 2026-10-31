@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "sunspec-interop fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "description",
+    "unitId",
+    "baseAddress",
+    "models"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "description": {
+      "type": "string"
+    },
+    "unitId": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 247
+    },
+    "baseAddress": {
+      "enum": [
+        0,
+        40000,
+        50000
+      ]
+    },
+    "models": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "ID"
+        ],
+        "properties": {
+          "ID": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65534
+          }
+        }
+      }
+    }
+  }
+}

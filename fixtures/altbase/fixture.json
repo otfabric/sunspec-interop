@@ -1,0 +1,29 @@
+{
+ "name": "altbase",
+ "description": "Base address 50000, 32-bit floats",
+ "unitId": 1,
+ "baseAddress": 50000,
+ "models": [
+  {
+   "ID": 1,
+   "Mn": "OT Fabric",
+   "Md": "Interop Device",
+   "Opt": "opt-a",
+   "Vr": "1.2.3",
+   "SN": "SN-0003",
+   "DA": 1
+  },
+  {
+   "ID": 111,
+   "A": 12.5,
+   "AphA": 4.25,
+   "PhVphA": 230.5,
+   "W": -500.5,
+   "Hz": 59.95,
+   "WH": 1000000.0,
+   "St": 4,
+   "Evt1": 1,
+   "Evt2": 0
+  }
+ ]
+}

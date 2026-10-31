@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: MIT
+# The upstream pin of this adapter and its one runtime dependency. Keep in step
+# with ARG UPSTREAM_VERSION in the Dockerfile and with versions.yaml. The hashes
+# are the sha256 of the wheels on PyPI; pip refuses anything else.
+pysunspec2==1.3.7 \
+    --hash=sha256:4bc5029ac2ee9ec8ea7bf7e4623c0fc269244c2f0292b2b7dca8588a4287eeeb
+pyserial==3.5 \
+    --hash=sha256:c4451db6ba391ca6ca299fb3ec7bae67a5c55dde170964c7a14ceefec02f2cf0
