@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "sunspec-interop capabilities",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "adapter",
+    "adapterVersion",
+    "contractVersion",
+    "upstream",
+    "roles",
+    "clientOperations",
+    "serverFunctions",
+    "baseAddresses",
+    "fixtures"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0"
+    },
+    "adapter": {
+      "type": "string"
+    },
+    "adapterVersion": {
+      "type": "string"
+    },
+    "contractVersion": {
+      "type": "string"
+    },
+    "upstream": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version",
+        "revision",
+        "artifact"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "revision": {
+          "type": "string"
+        },
+        "artifact": {
+          "type": "string"
+        }
+      }
+    },
+    "roles": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "server",
+          "client"
+        ]
+      }
+    },
+    "clientOperations": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "scan",
+          "write"
+        ]
+      }
+    },
+    "serverFunctions": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      }
+    },
+    "baseAddresses": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      }
+    },
+    "fixtures": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

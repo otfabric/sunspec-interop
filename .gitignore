@@ -1,0 +1,19 @@
+# Local build artifacts
+adapters/*/build/
+adapters/*/target/
+adapters/*/bin/
+adapters/*/obj/
+adapters/*/__pycache__/
+reports/
+scripts/__pycache__/
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+
+# Build artefacts live in /bin/ and /release/ (otfabric/engineering REPO-005)
+/bin/
+/release/
+*.test
+coverage.out
