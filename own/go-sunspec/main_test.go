@@ -146,3 +146,47 @@ func TestScaledKeepsExactIntegers(t *testing.T) {
 }
 
 func ptr(f float64) *float64 { return &f }
+
+func TestRawValue(t *testing.T) {
+	for in, want := range map[string]any{"750": json.Number("750"), "-95": json.Number("-95"), "0x10": json.Number("16"), "abc": "abc", "1.5": "1.5", "": ""} {
+		if got := rawValue(in); got != want {
+			t.Errorf("rawValue(%q) = %#v, want %#v", in, got, want)
+		}
+	}
+	for _, args := range [][]string{
+		{"--model", "123", "--point", "W"}, {"--model", "x", "--point", "W", "--value", "1"},
+		{"--model", "123", "--point", "W", "--value", "1", "--instance", "-1"},
+	} {
+		f, err := flags(args, "model", "instance", "point", "value")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := parseWrite(f); err == nil {
+			t.Errorf("parseWrite(%v) has no error", args)
+		}
+	}
+}
+
+func TestReadFixtureLimits(t *testing.T) {
+	dir := t.TempDir()
+	big := filepath.Join(dir, "big.json")
+	if err := os.WriteFile(big, make([]byte, maxFixture+1), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(filepath.Join(dir, "sub"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	for _, path := range []string{big, filepath.Join(dir, "sub"), filepath.Join(dir, "missing.json")} {
+		if _, err := readFixture(path); err == nil {
+			t.Errorf("readFixture(%s) has no error", path)
+		}
+	}
+	for _, v := range []int64{-1, 65536} {
+		if _, err := u16(v); err == nil {
+			t.Errorf("u16(%d) has no error", v)
+		}
+	}
+	if _, err := u8(256); err == nil {
+		t.Error("u8(256) has no error")
+	}
+}

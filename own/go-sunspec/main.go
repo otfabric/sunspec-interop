@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"os"
 	"sort"
 	"strconv"
@@ -97,6 +98,22 @@ func number(text string, bits int) (uint64, error) {
 	return strconv.ParseUint(text, 10, bits)
 }
 
+// u16 is v as a uint16, or an error when it does not fit.
+func u16(v int64) (uint16, error) {
+	if v < 0 || v > math.MaxUint16 {
+		return 0, fmt.Errorf("%d does not fit 16 bits", v)
+	}
+	return uint16(v), nil
+}
+
+// u8 is v as a uint8, or an error when it does not fit.
+func u8(v int64) (uint8, error) {
+	if v < 0 || v > math.MaxUint8 {
+		return 0, fmt.Errorf("%d does not fit 8 bits", v)
+	}
+	return uint8(v), nil
+}
+
 // fixtureName takes the optional NAME of print-fixture and print-registers.
 func fixtureName(args []string) (string, int) {
 	switch {
@@ -166,8 +183,8 @@ func fixtureNames() []string {
 	return names
 }
 
-// capabilities is the document of docs/CAPABILITIES.md. The client offers
-// only what go-sunspec's public API offers: it reads and does not write.
+// capabilities is the document of docs/CAPABILITIES.md: what go-sunspec's
+// public API offers, scan (Discover, ReadModels) and write (WritePoint).
 func capabilities() map[string]any {
 	return map[string]any{
 		"schemaVersion":   schema,
@@ -182,7 +199,7 @@ func capabilities() map[string]any {
 			"independentEngine": false,
 		},
 		"roles":            []string{"server", "client"},
-		"clientOperations": []string{"scan"},
+		"clientOperations": []string{"scan", "write"},
 		"serverFunctions":  []int{3, 6, 16},
 		"baseAddresses":    baseAddresses,
 		"fixtures":         fixtureNames(),

@@ -39,18 +39,23 @@ func runClient(args []string) int {
 		return usage("client needs an operation")
 	}
 	op := args[0]
+	known := []string{"host", "port", "unit-id", "timeout"}
 	switch op {
 	case "scan":
 	case "write":
-		// go-sunspec's client does not write (its LIMITATIONS.md), and the
-		// adapter does not write registers behind its back.
-		return usage("write: go-sunspec's client does not write; clientOperations is [\"scan\"]")
+		known = append(known, "model", "instance", "point", "value")
 	default:
 		return usage("unknown operation " + op)
 	}
-	f, err := flags(args[1:], "host", "port", "unit-id", "timeout")
+	f, err := flags(args[1:], known...)
 	if err != nil {
 		return usage(err.Error())
+	}
+	var w writeRequest
+	if op == "write" {
+		if w, err = parseWrite(f); err != nil {
+			return usage(err.Error())
+		}
 	}
 	host, ok := f["host"]
 	if !ok || host == "" {
@@ -74,7 +79,19 @@ func runClient(args []string) int {
 	}
 
 	doc := clientDoc{SchemaVersion: schema, Adapter: adapterName, Operation: op, Host: host, Port: int(port), UnitID: int(unit)}
-	result, kind, err := scan(host, int(port), uint8(unit), time.Duration(timeout*float64(time.Second)))
+	var (
+		result any
+		kind   string
+	)
+	dev, done, kind, err := connect(host, int(port), uint8(unit), time.Duration(timeout*float64(time.Second)))
+	if err == nil {
+		if op == "write" {
+			result, kind, err = write(done.ctx, dev, w)
+		} else {
+			result, kind, err = scan(done.ctx, dev)
+		}
+		done.close()
+	}
 	code := exitOK
 	if err != nil {
 		doc.Error = &clientError{Kind: kind, Message: err.Error()}
@@ -91,25 +108,37 @@ func runClient(args []string) int {
 	return code
 }
 
-// scan finds the device and reads every model: what go-sunspec's Discover
-// and ReadModels return, in the contract's document.
-func scan(host string, port int, unit uint8, timeout time.Duration) (any, string, error) {
+// session is an open connection and the deadline of the whole operation.
+type session struct {
+	ctx   context.Context
+	close func()
+}
+
+// connect opens the connection and finds the device with go-sunspec's
+// Discover, at the contract's base addresses.
+func connect(host string, port int, unit uint8, timeout time.Duration) (*sunspec.Device, session, string, error) {
 	client, err := modbus.New(modbus.Config{
 		URL: "tcp://" + net.JoinHostPort(host, strconv.Itoa(port)), Timeout: timeout, DialTimeout: timeout, Logger: modbus.NopLogger(),
 	})
 	if err != nil {
-		return nil, "connect", err
+		return nil, session{}, "connect", err
 	}
 	if err := client.Open(); err != nil {
-		return nil, "connect", err
+		return nil, session{}, "connect", err
 	}
-	defer func() { _ = client.Close() }()
 	ctx, cancel := context.WithTimeout(context.Background(), 4*timeout+30*time.Second)
-	defer cancel()
+	s := session{ctx: ctx, close: func() { cancel(); _ = client.Close() }}
 	dev, err := sunspec.Discover(ctx, client, &sunspec.DiscoverOptions{UnitID: unit, BaseAddresses: baseAddresses})
 	if err != nil {
-		return nil, kindOf(err), err
+		s.close()
+		return nil, session{}, kindOf(err), err
 	}
+	return dev, s, "", nil
+}
+
+// scan reads every model: what go-sunspec's ReadModels returns, in the
+// contract's document.
+func scan(ctx context.Context, dev *sunspec.Device) (any, string, error) {
 	results, _ := dev.ReadModels(ctx, dev.Discovery.Models)
 	models := make([]map[string]any, 0, len(results))
 	for _, r := range results {

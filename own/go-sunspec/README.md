@@ -86,19 +86,24 @@ make -f own/go-sunspec/Makefile image smoke interop VERSION=dev  # against refer
   values, `scaled` the scaled ones, a point not implemented is `null`. Where a
   scale factor leaves the value as it is, `scaled` is the exact raw integer, not
   go-sunspec's `float64` (which cannot hold every 64-bit accumulator).
+- **Client write** (go-sunspec v0.10.0 or later): go-sunspec's
+  `Device.WritePoint`. The contract gives the raw value; go-sunspec takes the
+  engineering value of a scaled point, so the adapter hands it raw × 10^sf with
+  the scale factor the device reports, as for the fixtures. go-sunspec reads the
+  model, encodes the point, writes only its registers with FC 16 and reads it
+  back; `value` is the raw value read back. A point that is not read-write is
+  refused by go-sunspec before anything is sent (`ErrPointNotWritable`), exit 1.
 - `print-registers` reads the served map back through the `Server`'s own
   request handler.
+- A fixture is read through an `os.Root` of its directory, regular files of up
+  to 1 MiB only.
 
 ## What it cannot do
 
-Not declared, because the public API of go-sunspec does not offer it and the
-adapter does not encode protocol itself:
-
-- `write` (the only client operation besides `scan`): go-sunspec's client
-  reads only (its LIMITATIONS.md). `client write` is a usage error, and the
-  write cases of `tests/cases.tsv` are `unsupported` with this image as the
-  client. As a device it accepts writes of read-write points and refuses the
-  rest, which the cases check with pysunspec2 as the client.
+It declares every client operation of the contract, `scan` and `write`, and
+every case of `tests/cases.tsv` runs with it on either side. An image built
+from go-sunspec before v0.10.0, which has no `WritePoint`, cannot be built from
+this directory any more.
 
 Where the device differs from pysunspec2's without a case failing (the `pad`
 value) is in [docs/COMPATIBILITY.md](../../docs/COMPATIBILITY.md).

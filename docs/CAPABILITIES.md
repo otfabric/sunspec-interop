@@ -16,7 +16,7 @@
 | Independent engine | yes | no |
 | Register encoding from values | pysunspec2 (`Device.get_mb`) | go-sunspec (`NewServer`) |
 | Device transport | The adapter's Modbus TCP layer: functions 3, 6, 16 | go-modbus: functions 3, 6, 16 |
-| Client | pysunspec2 (`SunSpecModbusClientDeviceTCP`): scan, point read and write | go-sunspec (`Discover`, `ReadModels`): scan only |
+| Client | pysunspec2 (`SunSpecModbusClientDeviceTCP`): scan, point read and write | go-sunspec (`Discover`, `ReadModels`, `WritePoint`): scan, point write |
 | Base addresses scanned | 40000, 0, 50000 | 40000, 0, 50000 |
 | Models | Those of the model definitions in the pysunspec2 wheel | Those of go-sunspec's registry |
 
@@ -25,4 +25,4 @@ Not covered:
 - Models without a definition. pysunspec2 skips them in its model list, so `scan` does not report them.
 - Modbus RTU, TLS and input registers.
 - pysunspec2 as a Modbus server: it has none, so the transport of the device role is not evidence about pysunspec2.
-- `write` in the client of `otfabric`: go-sunspec's client does not write (its LIMITATIONS.md), and the adapter does not write registers on its own, so `clientOperations` is `["scan"]` and the write cases are `unsupported` for it as a client. Its device accepts writes, so a pysunspec2 client writes it.
+- A write of a read-only point by the client of `otfabric`: go-sunspec refuses it before sending anything, so the case `device.write.read-only-point` shows the device's refusal only with pysunspec2 as the client.

@@ -73,7 +73,7 @@ func runServer(args []string) int {
 	}
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
-	if err := os.WriteFile(readyFile, []byte("ready\n"), 0o644); err != nil {
+	if err := os.WriteFile(readyFile, []byte("ready\n"), 0o600); err != nil {
 		fmt.Fprintln(os.Stderr, "ready file:", err)
 		_ = ms.Stop()
 		return exitFailed

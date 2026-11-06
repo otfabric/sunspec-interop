@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -39,8 +40,38 @@ func decodeJSON(data []byte, into any) error {
 	return nil
 }
 
+// maxFixture is the largest fixture read; the baked ones are a few KiB.
+const maxFixture = 1 << 20
+
+// readFixture reads the regular file at path, of at most maxFixture bytes,
+// through an os.Root of its directory: the file is the one the path names,
+// with no symbolic link out of that directory.
+func readFixture(path string) ([]byte, error) {
+	root, err := os.OpenRoot(filepath.Dir(path))
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = root.Close() }()
+	f, err := root.Open(filepath.Base(path))
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = f.Close() }()
+	if st, err := f.Stat(); err != nil || !st.Mode().IsRegular() {
+		return nil, fmt.Errorf("%s: not a regular file", path)
+	}
+	data, err := io.ReadAll(io.LimitReader(f, maxFixture+1))
+	if err != nil {
+		return nil, err
+	}
+	if len(data) > maxFixture {
+		return nil, fmt.Errorf("%s: larger than %d bytes", path, maxFixture)
+	}
+	return data, nil
+}
+
 func loadFixture(path string) (*fixture, error) {
-	data, err := os.ReadFile(path)
+	data, err := readFixture(path)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +95,12 @@ func loadFixture(path string) (*fixture, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%s: baseAddress: %w", path, err)
 	}
-	fx.UnitID, fx.BaseAddress = uint8(unit), uint16(base)
+	if fx.UnitID, err = u8(unit); err != nil {
+		return nil, fmt.Errorf("%s: unitId: %w", path, err)
+	}
+	if fx.BaseAddress, err = u16(base); err != nil {
+		return nil, fmt.Errorf("%s: baseAddress: %w", path, err)
+	}
 	abs, err := filepath.Abs(path)
 	if err != nil {
 		return nil, err
@@ -103,11 +139,15 @@ func integer(v any, lo, hi int64) (int64, error) {
 func (fx *fixture) server() (*sunspec.Server, error) {
 	models := make([]sunspec.ServerModel, len(fx.Models))
 	for i, m := range fx.Models {
-		id, err := integer(m["ID"], 1, 65534)
+		n, err := integer(m["ID"], 1, 65534)
 		if err != nil {
 			return nil, fmt.Errorf("model %d: ID: %w", i, err)
 		}
-		meta := registry.ByID(uint16(id))
+		id, err := u16(n)
+		if err != nil {
+			return nil, fmt.Errorf("model %d: ID: %w", i, err)
+		}
+		meta := registry.ByID(id)
 		if meta == nil || meta.Group == nil {
 			return nil, fmt.Errorf("model %d: go-sunspec has no definition of model %d", i, id)
 		}
@@ -115,7 +155,7 @@ func (fx *fixture) server() (*sunspec.Server, error) {
 		if err != nil {
 			return nil, fmt.Errorf("model %d (%d): %w", i, id, err)
 		}
-		models[i] = sunspec.ServerModel{ID: uint16(id), Schema: meta, Values: values}
+		models[i] = sunspec.ServerModel{ID: id, Schema: meta, Values: values}
 	}
 	srv, err := sunspec.NewServer(&sunspec.ServerOptions{UnitID: fx.UnitID, BaseAddress: fx.BaseAddress}, models...)
 	if err != nil {
@@ -245,9 +285,16 @@ func registerMap(srv *sunspec.Server) ([]uint16, error) {
 	}
 	out := make([]uint16, 0, n)
 	for off := 0; off < n; off += 125 {
-		q := min(125, n-off)
+		addr, err := u16(int64(srv.BaseAddress()) + int64(off))
+		if err != nil {
+			return nil, err
+		}
+		q, err := u16(int64(min(125, n-off)))
+		if err != nil {
+			return nil, err
+		}
 		regs, err := srv.HandleHoldingRegisters(context.Background(), &modbus.HoldingRegistersRequest{
-			UnitID: srv.UnitID(), FunctionCode: 3, Addr: srv.BaseAddress() + uint16(off), Quantity: uint16(q),
+			UnitID: srv.UnitID(), FunctionCode: 3, Addr: addr, Quantity: q,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("reading the map at %d: %w", int(srv.BaseAddress())+off, err)
