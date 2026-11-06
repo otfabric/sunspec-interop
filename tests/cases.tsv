@@ -1,0 +1,16 @@
+# Cases of scripts/interop.sh: each runs for every client against every server.
+#
+# Columns, separated by tabs:
+#   1  stable scenario ID (results.json)
+#   2  fixture the server serves
+#   3  client operation; a client that does not declare it is "unsupported"
+#   4  flags of the operation, or "-"; --host and the fixture's --unit-id are added
+#   5  check: fixture (every model and raw value as the fixture sets it),
+#      readback (the write lands and a new scan reads it), refused-unchanged
+#      (exit 1, and a new scan reads the fixture's value), refused (ok false)
+device.scan.baseline	baseline	scan	-	fixture
+device.scan.edge	edge	scan	-	fixture
+device.scan.altbase	altbase	scan	-	fixture
+device.write.read-write-point	baseline	write	--model 123 --point WMaxLimPct --value 750	readback
+device.write.read-only-point	baseline	write	--model 103 --point W --value 1	refused-unchanged
+device.unit-id.other-unit	baseline	scan	--unit-id 9	refused

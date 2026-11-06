@@ -1,4 +1,4 @@
-# Known bugs of upstream versions, for scripts/selftest.py.
+# Known bugs of upstream versions, for scripts/interop.sh (scripts/selftest.py).
 #
 # A released pin has no entry here: an adapter is published on a version that
 # passes every case. Entries exist for versions that are built as candidates,

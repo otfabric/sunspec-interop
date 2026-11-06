@@ -1,6 +1,6 @@
 # Container contract
 
-Version: **1.0** (`contract_version` in [versions.yaml](../versions.yaml))
+Version: **1.1** (`contract_version` in [versions.yaml](../versions.yaml))
 
 Consumers depend on this document, not on the adapter's source. A change that breaks it bumps the major version; an addition bumps the minor one. Documents carry `schemaVersion` `"1.0"`, which changes only with the major version.
 
@@ -8,7 +8,7 @@ Consumers depend on this document, not on the adapter's source. A change that br
 
 | Item | Value |
 |------|-------|
-| Image | `ghcr.io/otfabric/sunspec-interop-<adapter>` |
+| Image | `ghcr.io/otfabric/sunspec-interop-<adapter>`; OT Fabric's own stack is the adapter `otfabric` |
 | Entrypoint | `sunspec-interop` |
 | Default command | `server` |
 | Protocol | SunSpec over Modbus TCP |
@@ -50,17 +50,17 @@ Prints one document on standard output ([schema](../schemas/client-result.schema
 | `result` | Present when `ok` is true |
 | `error` | `kind` (`connect`, `failed`) and `message`, present when `ok` is false |
 
-`scan` finds the base address among 40000, 0 and 50000, in that order, and reads every model. `result` holds `baseAddress` and `models`, one entry per model: `id`, `name`, `address`, `length`, `values` (raw) and `scaled`. Both are the point names of the model, with repeating groups as lists of objects. A not-implemented point is `null`. `error` appears in a model pysunspec2 flagged.
+`scan` finds the base address among 40000, 0 and 50000, in that order, and reads every model. `result` holds `baseAddress` and `models`, one entry per model: `id`, `name`, `address`, `length`, `values` (raw) and `scaled`. Both are the point names of the model, with repeating groups as lists of objects. A not-implemented point is `null`. `error` appears in a model the client's stack flagged.
 
 `write` scans, writes one point in raw form and reads it back. `result` holds `model`, `point` and the `value` read back.
 
 ## `print-capabilities`
 
-The capability document ([schema](../schemas/capabilities.schema.json)).
+The capability document ([schema](../schemas/capabilities.schema.json)). Since 1.1, `upstream.independentEngine` says whether the stack is an independent implementation; it is `false` for OT Fabric's own stack. A client operation the document does not list is a usage error.
 
 ## `print-fixture`, `print-registers`
 
-The fixture as baked in, and the whole register map pysunspec2 encodes from it, from the base address through the end model: `fixture`, `unitId`, `baseAddress`, `registers` (numbers).
+The fixture as baked in, and the whole register map the adapter's stack encodes from it, from the base address through the end model: `fixture`, `unitId`, `baseAddress`, `registers` (numbers).
 
 ## Exit codes
 

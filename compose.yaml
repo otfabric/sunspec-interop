@@ -1,0 +1,26 @@
+# Reference devices for local work. Ports are published on loopback only:
+# these are unauthenticated SunSpec Modbus TCP devices that accept writes from
+# anyone who can reach them, and must not be reachable from a plant network.
+#
+#   docker compose up -d --wait        # every device, waits for readiness
+#   docker compose down
+#
+# SUNSPEC_INTEROP_VERSION selects the image tag (default: dev, the local build),
+# SUNSPEC_INTEROP_FIXTURE the fixture (default: baseline).
+
+x-server: &server
+  command: ["server", "--fixture", "/fixtures/${SUNSPEC_INTEROP_FIXTURE:-baseline}/fixture.json"]
+  healthcheck:
+    test: ["CMD", "test", "-f", "/run/sunspec-interop/ready"]
+    interval: 2s
+    timeout: 2s
+    retries: 15
+    start_period: 10s
+  stop_grace_period: 10s
+
+services:
+  pysunspec2:
+    <<: *server
+    image: ghcr.io/otfabric/sunspec-interop-pysunspec2:${SUNSPEC_INTEROP_VERSION:-dev}
+    ports:
+      - "127.0.0.1:1502:1502"

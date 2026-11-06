@@ -49,6 +49,10 @@
         },
         "artifact": {
           "type": "string"
+        },
+        "independentEngine": {
+          "type": "boolean",
+          "description": "False for OT Fabric's own stack (own/): a result against it is not independent evidence. Absent means true (contract 1.0)."
         }
       }
     },

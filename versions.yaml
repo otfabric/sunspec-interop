@@ -3,8 +3,8 @@
 # The Dockerfiles are the source of truth for a build:
 # scripts/check-versions.sh fails when this file disagrees with them.
 
-interop_version: "0.1.0"
-contract_version: "1.0"        # docs/CONTAINER_CONTRACT.md
+interop_version: "0.2.0"
+contract_version: "1.1"        # docs/CONTAINER_CONTRACT.md
 fixture_schema: "1.0"          # schemas/fixture.schema.json
 
 protocol:
@@ -27,7 +27,35 @@ implementations:
     roles: [server, client]
     published: true
 
+# OT Fabric's own stack behind the contract, for others to test against
+# (own/go-sunspec/README.md). Not a reference, not in a release or
+# manifest.json, and no pin: the Own stack (go-sunspec) workflow builds the
+# latest go-sunspec release by hand.
+own_implementations:
+  otfabric:
+    upstream: "go-sunspec"
+    repository: "https://github.com/otfabric/go-sunspec"
+    artifact: "go:github.com/otfabric/go-sunspec"
+    version: "latest release, resolved when the image is built by hand"
+    license: "MIT"
+    language: "Go"
+    independent_engine: false
+    roles: [server, client]
+    image: "ghcr.io/otfabric/sunspec-interop-otfabric"
+    build: "own/go-sunspec"
+
 base_images:
+  # Multi-arch index digests. Each Dockerfile names them as *_DIGEST build
+  # arguments.
   python:
     tag: "3.14.8-slim-trixie"
     digest: "sha256:a2b82f3c48559aa0a8446d9af49826b6e2b2016f4cd2afabfe6013ec53729170"
+    used_by: [pysunspec2]
+  golang:
+    tag: "1.27.2-trixie"
+    digest: "sha256:e58d6f83b3416618d8bcac2b3dde1b7f7e3c4a77d25e88637f8bbae81536c48d"
+    used_by: [otfabric]
+  debian:
+    tag: "trixie-slim"
+    digest: "sha256:f6b08b09a05725f9431502d3b5714f5c4576e82c1a84fa1debe0c24a7e0c3ec4"
+    used_by: [otfabric]

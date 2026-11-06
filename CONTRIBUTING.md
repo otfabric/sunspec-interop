@@ -2,7 +2,7 @@
 
 ## Ground rules
 
-- **Nothing here may know about a library under test.** No imports, no build steps, no expectations and no names from any consumer.
+- **Nothing here may know about a library under test.** No imports, no build steps, no expectations and no names from `go-sunspec` or any other consumer. See [REQUIREMENTS.md](REQUIREMENTS.md) R1, and `own/` for the one exception.
 - **The contract is the product.** A change to [docs/CONTAINER_CONTRACT.md](docs/CONTAINER_CONTRACT.md) or [docs/FIXTURES.md](docs/FIXTURES.md) lands with the adapter change.
 - **Declare only what is tested.** A capability is listed when the self-test exercises it.
 - **Pin everything.** Upstream by exact version and wheel hash, base images by digest, all mirrored in [versions.yaml](versions.yaml).
@@ -14,6 +14,8 @@ Docker (with buildx), GNU make and Python 3.
 ```sh
 make ci     # validate, lint, build, self-test, document schemas
 ```
+
+The own-stack image is built apart: `make -f own/go-sunspec/Makefile image smoke interop VERSION=dev` tests it against the locally built references (`VERSION` defaults to the latest harness release).
 
 ## Moving the upstream pin
 
