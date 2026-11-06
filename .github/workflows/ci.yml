@@ -46,9 +46,12 @@ jobs:
         run: make lint
       - name: No reference to a library under test
         # REQUIREMENTS.md R1: adapters, fixtures, scripts and schemas must not
-        # know any consumer. Documentation may name consumers as examples.
+        # know any consumer. Documentation may name consumers as examples, and
+        # own/ with its workflow is the one exception (own/go-sunspec/README.md).
+        # go-sunspec runs on go-modbus, so neither may appear; "modbus" alone
+        # is the transport and stays allowed.
         run: |
-          if grep -rInE 'otfabric/go-|go-sunspec|sunspecctl' adapters fixtures schemas scripts tests Makefile compose.yaml; then
+          if grep -rInE 'otfabric/go-|go-sunspec|go-modbus|sunspecctl|modbusctl' adapters fixtures schemas scripts tests Makefile compose.yaml; then
             echo "::error::consumer-specific reference found"; exit 1
           fi
 

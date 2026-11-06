@@ -37,7 +37,7 @@ image = $(REGISTRY)/sunspec-interop-$(1)
 
 export REGISTRY VERSION
 
-# image-% and smoke-% are pattern rules, which make ignores for .PHONY
+# image-%, smoke-% and candidate-% are pattern rules, which make ignores for .PHONY
 # targets: they depend on FORCE instead.
 .PHONY: help all ci validate unittests documents lint images smoke interop buildx publish \
         buildx-setup publish-arch publish-manifest digests capabilities clean FORCE
@@ -102,10 +102,13 @@ image-%: FORCE ## Build one adapter image, e.g. image-pysunspec2
 
 # ── Self-tests (images must be built) ─────────────────────────────────────────
 
-smoke: interop ## Contract and cross-role self-test
+smoke: $(addprefix smoke-,$(ADAPTERS)) ## Container-contract smoke test of every adapter
 
-interop: ## Self-test: every client case against every fixture, contract, exit codes
-	@for a in $(ADAPTERS); do python3 scripts/selftest.py $$a || exit 1; done
+smoke-%: FORCE ## Smoke test one adapter, e.g. smoke-pysunspec2
+	@scripts/smoke.sh $*
+
+interop: ## Cross-stack self-test: every client against every server on every case of tests/cases.tsv
+	@scripts/interop.sh $(ADAPTERS)
 
 # ── Upstream candidates ───────────────────────────────────────────────────────
 # Builds one adapter on another upstream version than the release pin and runs
@@ -127,7 +130,8 @@ candidate-%: FORCE ## Build one adapter on CANDIDATE_VERSION (and CANDIDATE_SHA)
 		--tag $(call image,$*):candidate \
 		--file adapters/$*/Dockerfile .
 	@for a in $(filter-out $*,$(ADAPTERS)); do docker tag $(call image,$$a):$(VERSION) $(call image,$$a):candidate || exit 1; done
-	@VERSION=candidate python3 scripts/selftest.py $*
+	@VERSION=candidate scripts/smoke.sh $*
+	@VERSION=candidate scripts/interop.sh $(ADAPTERS)
 
 capabilities: ## Print the capability document of every adapter
 	@for a in $(ADAPTERS); do docker run --rm $(call image,$$a):$(VERSION) print-capabilities; done

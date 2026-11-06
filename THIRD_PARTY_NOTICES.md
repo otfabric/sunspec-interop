@@ -8,12 +8,25 @@ Every image carries the licence texts of what it contains under `/licenses`.
 | Part | Licence |
 |------|---------|
 | Repository tooling, fixtures, schemas, scripts, documentation | MIT ([LICENSE](LICENSE)) |
-| Adapter programs under `adapters/` | MIT |
+| Adapter programs under `adapters/` and `own/` | MIT |
 | The published images | the adapter (MIT) together with the components listed below, each under its own licence |
 
 Nothing in this repository is linked into a consumer: a library that tests
 against the images talks to them over TCP and reads their output, and is not
 affected by their licences.
+
+## Image `sunspec-interop-otfabric`
+
+Built by hand from `own/go-sunspec/` (not part of a release); every module's licence is in the image under `/licenses`.
+
+| Component | Version | Licence | Source |
+|-----------|---------|---------|--------|
+| go-sunspec | latest release when built | MIT | https://github.com/otfabric/go-sunspec |
+| go-modbus | as go-sunspec requires | MIT | https://github.com/otfabric/go-modbus |
+| go-serial | as go-modbus requires | MIT | https://github.com/otfabric/go-serial |
+| Go standard library | 1.27.2 | BSD-3-Clause | https://go.dev |
+| Adapter | this repository, `own/go-sunspec/` | MIT | https://github.com/otfabric/sunspec-interop |
+| Base system | Debian trixie-slim | various; see `/usr/share/doc/*/copyright` in the image | https://www.debian.org |
 
 ## Image `sunspec-interop-pysunspec2`
 

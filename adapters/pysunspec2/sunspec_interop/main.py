@@ -12,7 +12,7 @@ from sunspec2.modbus import modbus
 from . import client, fixture, server
 
 ADAPTER = "pysunspec2"
-CONTRACT = "1.0"
+CONTRACT = "1.1"
 SCHEMA = "1.0"
 EXIT_OK, EXIT_FAILED, EXIT_USAGE, EXIT_CONNECT, EXIT_FIXTURE = 0, 1, 2, 3, 4
 BUILD_INFO = "/opt/sunspec-interop/build-info.json"
@@ -88,6 +88,7 @@ def capabilities():
             "version": info["upstreamVersion"],
             "revision": info["upstreamRevision"],
             "artifact": info["upstreamArtifact"],
+            "independentEngine": True,
         },
         "roles": ["server", "client"],
         "clientOperations": sorted(client.OPERATIONS),
