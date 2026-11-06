@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	sunspec "github.com/otfabric/go-sunspec"
 )
 
 func TestShift(t *testing.T) {
@@ -125,3 +127,22 @@ func TestUsage(t *testing.T) {
 		}
 	}
 }
+
+// A 64-bit accumulator with scale factor 0 is reported exactly, not through
+// a float64.
+func TestScaledKeepsExactIntegers(t *testing.T) {
+	big := float64(uint64(18446744073709551))
+	sf := int16(0)
+	raw, scaled := groupDoc(&sunspec.DecodedGroup{Points: []sunspec.DecodedPoint{
+		{Name: "TotWhInj", Type: "acc64", RawValue: uint64(18446744073709551), ScaledValue: &big, SFRawValue: &sf, Implemented: true},
+		{Name: "W", Type: "int16", RawValue: int16(-30), ScaledValue: ptr(-300.0), Implemented: true},
+	}})
+	if scaled["TotWhInj"] != uint64(18446744073709551) || raw["TotWhInj"] != uint64(18446744073709551) {
+		t.Errorf("TotWhInj: raw %v, scaled %v", raw["TotWhInj"], scaled["TotWhInj"])
+	}
+	if scaled["W"] != -300.0 {
+		t.Errorf("W: scaled %v", scaled["W"])
+	}
+}
+
+func ptr(f float64) *float64 { return &f }

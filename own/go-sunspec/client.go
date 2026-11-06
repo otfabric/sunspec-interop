@@ -9,6 +9,7 @@ import (
 	"math"
 	"net"
 	"os"
+	"reflect"
 	"strconv"
 	"time"
 
@@ -156,10 +157,12 @@ func groupDoc(g *sunspec.DecodedGroup) (map[string]any, map[string]any) {
 			continue
 		}
 		raw[p.Name] = finite(p.RawValue)
-		if p.ScaledValue != nil {
+		scaled[p.Name] = raw[p.Name]
+		// go-sunspec gives a scaled value as a float64. A scale factor of 0
+		// leaves the raw integer, which a float64 cannot always hold (a
+		// 64-bit accumulator): then the exact raw value is the scaled one.
+		if p.ScaledValue != nil && !sameAsInteger(p.RawValue, *p.ScaledValue) {
 			scaled[p.Name] = finite(*p.ScaledValue)
-		} else {
-			scaled[p.Name] = raw[p.Name]
 		}
 	}
 	for _, c := range g.Groups {
@@ -169,6 +172,16 @@ func groupDoc(g *sunspec.DecodedGroup) (map[string]any, map[string]any) {
 		raw[c.Name], scaled[c.Name] = append(rl, r), append(sl, s)
 	}
 	return raw, scaled
+}
+
+// sameAsInteger is true when raw is an integer whose float64 is f: the scale
+// factor did nothing.
+func sameAsInteger(raw any, f float64) bool {
+	switch v := raw.(type) {
+	case int8, int16, int32, int64, int, uint8, uint16, uint32, uint64, uint:
+		return float64(reflect.ValueOf(v).Convert(reflect.TypeFor[float64]()).Float()) == f
+	}
+	return false
 }
 
 func finite(v any) any {

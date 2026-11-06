@@ -83,7 +83,9 @@ make -f own/go-sunspec/Makefile image smoke interop VERSION=dev  # against refer
   "the other register type" to it).
 - **Client.** `scan` is go-sunspec's `Discover` with the contract's base
   addresses (40000, 0, 50000) and `ReadModels`; `values` are the decoded raw
-  values, `scaled` the scaled ones, a point not implemented is `null`.
+  values, `scaled` the scaled ones, a point not implemented is `null`. Where a
+  scale factor leaves the value as it is, `scaled` is the exact raw integer, not
+  go-sunspec's `float64` (which cannot hold every 64-bit accumulator).
 - `print-registers` reads the served map back through the `Server`'s own
   request handler.
 
