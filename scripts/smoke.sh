@@ -16,7 +16,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=scripts/lib.sh
 source "${SCRIPT_DIR}/lib.sh"
 
-ADAPTER="${1:?usage: smoke.sh <adapter>}"
+ADAPTER="${1:?usage: smoke.sh ADAPTER}"
 require_tools
 IMAGE="$(image_of "${ADAPTER}")"
 log "${IMAGE}"
