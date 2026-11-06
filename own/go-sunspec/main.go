@@ -21,7 +21,7 @@ import (
 const (
 	adapterName = "otfabric"
 	fixtureRoot = "/fixtures"
-	contract    = "1.1"
+	contract    = "1.2"
 	schema      = "1.0"
 )
 

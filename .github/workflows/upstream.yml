@@ -50,7 +50,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        adapter: [pysunspec2]
+        adapter: [pysunspec2, cbsigma]
     steps:
       - uses: actions/checkout@v7
 

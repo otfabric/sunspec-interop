@@ -12,7 +12,7 @@ from sunspec2.modbus import modbus
 from . import client, fixture, server
 
 ADAPTER = "pysunspec2"
-CONTRACT = "1.1"
+CONTRACT = "1.2"
 SCHEMA = "1.0"
 EXIT_OK, EXIT_FAILED, EXIT_USAGE, EXIT_CONNECT, EXIT_FIXTURE = 0, 1, 2, 3, 4
 BUILD_INFO = "/opt/sunspec-interop/build-info.json"
@@ -100,7 +100,7 @@ def capabilities():
 
 def run_client(args):
     doc = {"schemaVersion": SCHEMA, "adapter": ADAPTER, "operation": args.operation, "host": args.host, "port": args.port, "unitId": args.unit_id, "ok": False}
-    if args.operation == "write" and (args.model is None or args.point is None or args.value is None):
+    if args.operation in ("write", "write-group") and (args.model is None or args.point is None or args.value is None):
         print("usage error: write needs --model, --point and --value", file=sys.stderr)
         return EXIT_USAGE
     try:

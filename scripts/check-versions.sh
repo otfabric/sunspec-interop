@@ -42,6 +42,24 @@ for dockerfile in adapters/*/Dockerfile; do
         status=1
     fi
 done
+# cbsigma: two upstream modules, both pinned in the Dockerfile and in go.mod
+# (adapters/cbsigma/go.mod is the source of truth for a build).
+if [[ -f adapters/cbsigma/Dockerfile ]]; then
+    arg() { sed -nE "s/^ARG $2=(.+)$/\1/p" "$1" | head -1; }
+    gomod() { sed -nE "s|^[[:space:]]*(require[[:space:]]+)?$1 (v[^ ]+).*$|\2|p" adapters/cbsigma/go.mod; }
+    for pair in "UPSTREAM_VERSION github.com/cB-Sigma/sunspec" "SIM_VERSION github.com/cB-Sigma/sunspec-sim"; do
+        read -r name module <<<"${pair}"
+        pinned="$(arg adapters/cbsigma/Dockerfile "${name}")"
+        if [[ -n "${pinned}" && "${pinned}" == "$(gomod "${module}")" ]]; then
+            echo "ok   cbsigma ${module} in Dockerfile and go.mod: ${pinned}"
+        else
+            echo "FAIL cbsigma ${module}: Dockerfile ${name}=${pinned}, go.mod $(gomod "${module}")"
+            status=1
+        fi
+    done
+    need "cbsigma sunspec-sim revision" "$(arg adapters/cbsigma/Dockerfile SIM_SHA)"
+    need "cbsigma sunspec-sim module" "github.com/cB-Sigma/sunspec-sim $(arg adapters/cbsigma/Dockerfile SIM_VERSION)"
+fi
 if [[ "${found}" -eq 0 ]]; then
     echo "FAIL no adapter Dockerfile found"
     status=1

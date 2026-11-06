@@ -42,8 +42,11 @@ framework.
 ## R2 - Reference implementations
 
 - R2.1 In scope: the SunSpec Alliance's pysunspec2 (Python, independent
-  engine).
-- R2.2 Each implementation is its own image. No image contains two.
+  engine) and cB-Sigma's Go stack (independent engine): its library
+  `sunspec` as the client and `sunspec-sim`, built on that library's model
+  tables and device package, as the device.
+- R2.2 Each implementation is its own image. No image contains two
+  (cB-Sigma's two modules are one implementation).
 - R2.3 Each image provides both roles where the implementation has them: a
   device (serving a fixture) and a client (bounded operations).
 - R2.4 An adapter uses the implementation's public API as an application

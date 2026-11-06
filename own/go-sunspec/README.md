@@ -83,7 +83,9 @@ make -f own/go-sunspec/Makefile image smoke interop VERSION=dev  # against refer
   "the other register type" to it).
 - **Client.** `scan` is go-sunspec's `Discover` with the contract's base
   addresses (40000, 0, 50000) and `ReadModels`; `values` are the decoded raw
-  values, `scaled` the scaled ones, a point not implemented is `null`. Where a
+  values, `scaled` the scaled ones, a point not implemented is `null`; a group
+  the schema says occurs once (`Count` 1, no count point) is an object, a
+  repeating group a list. Where a
   scale factor leaves the value as it is, `scaled` is the exact raw integer, not
   go-sunspec's `float64` (which cannot hold every 64-bit accumulator).
 - **Client write** (go-sunspec v0.10.0 or later): go-sunspec's
@@ -100,10 +102,12 @@ make -f own/go-sunspec/Makefile image smoke interop VERSION=dev  # against refer
 
 ## What it cannot do
 
-It declares every client operation of the contract, `scan` and `write`, and
-every case of `tests/cases.tsv` runs with it on either side. An image built
+It declares the client operations `scan` and `write`, not `write-group`
+(contract 1.2): go-sunspec's `WritePoint` writes top-level points only, so the
+`der.write-group.*` cases are `unsupported` with it as the client. Every other
+case of `tests/cases.tsv` runs with it on either side. An image built
 from go-sunspec before v0.10.0, which has no `WritePoint`, cannot be built from
 this directory any more.
 
-Where the device differs from pysunspec2's without a case failing (the `pad`
-value) is in [docs/COMPATIBILITY.md](../../docs/COMPATIBILITY.md).
+Where the device differs from the references' without a case failing (the
+`pad` value, against pysunspec2) is in [docs/COMPATIBILITY.md](../../docs/COMPATIBILITY.md).

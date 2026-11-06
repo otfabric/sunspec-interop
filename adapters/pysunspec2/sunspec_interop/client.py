@@ -45,10 +45,50 @@ def scan(args):
     return _document(mb, mb.base_addr)
 
 
+def _resolve(group, path):
+    """The group and the point at a path of the contract: "PFWInj.PF" (a group
+    that occurs once), "Crv[1].Pt[0].V" (occurrences from 0)."""
+    parts = path.split(".")
+    for part in parts[:-1]:
+        name, _, index = part.partition("[")
+        child = group.groups.get(name)
+        if child is None:
+            raise LookupError(f"no group {name} in {path}")
+        if index:
+            if not isinstance(child, list):
+                raise LookupError(f"{name} occurs once, it takes no index in {path}")
+            try:
+                child = child[int(index.rstrip("]"))]
+            except (ValueError, IndexError) as e:
+                raise LookupError(f"no occurrence {index.rstrip(']')} of {name} in {path}") from e
+        elif isinstance(child, list):
+            raise LookupError(f"{name} repeats, it needs an index in {path}")
+        group = child
+    point = group.points.get(parts[-1])
+    if point is None:
+        raise LookupError(f"no point {path}")
+    return group, point
+
+
 def write(args):
     mb = _device(args)
     mb.scan(connect=True)
-    point = _find(mb, args.model, args.instance).points.get(args.point)
+    model = _find(mb, args.model, args.instance)
+    if args.operation == "write-group":
+        # A point of a group is no client point of its own: the group writes
+        # its changed points (Group.write) and reads itself back.
+        if "." not in args.point:
+            raise LookupError(f"{args.point} is not the path of a group's point")
+        group, point = _resolve(model, args.point)
+        point.value = args.value
+        mb.connect()
+        try:
+            group.write()
+            group.read()
+        finally:
+            mb.disconnect()
+        return {"model": args.model, "point": args.point, "value": point.value}
+    point = model.points.get(args.point)
     if point is None:
         raise LookupError(f"model {args.model} has no point {args.point}")
     point.value = args.value
@@ -61,5 +101,5 @@ def write(args):
     return {"model": args.model, "point": args.point, "value": point.value}
 
 
-OPERATIONS = {"scan": scan, "write": write}
+OPERATIONS = {"scan": scan, "write": write, "write-group": write}
 CONNECT_ERRORS = (ConnectionError, TimeoutError, OSError, modbus.ModbusClientError)

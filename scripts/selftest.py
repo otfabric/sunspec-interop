@@ -27,7 +27,7 @@ import interop_result as ir
 
 ROOT = Path(__file__).resolve().parent.parent
 LABEL = "sunspec-interop.run"
-FIXTURES = ("baseline", "edge", "altbase")
+FIXTURES = ("baseline", "edge", "altbase", "der")
 CASES = ROOT / "tests" / "cases.tsv"
 FLOOR = 6
 
@@ -75,7 +75,7 @@ class Run:
         try:
             reason = fn()
             outcome = "pass" if reason is None else "fail"
-        except (subprocess.TimeoutExpired, OSError, ValueError, KeyError, RuntimeError, StopIteration) as e:
+        except (subprocess.TimeoutExpired, OSError, ValueError, KeyError, IndexError, TypeError, RuntimeError, StopIteration) as e:
             outcome, reason = "infra-error", repr(e)
         self.record(scenario, roles, outcome, reason, started)
 
@@ -141,8 +141,30 @@ def fixture(name):
     return json.loads((ROOT / "fixtures" / name / "fixture.json").read_text())
 
 
-def point(doc, model, name):
-    return next(m for m in doc["result"]["models"] if m["id"] == model)["values"][name]
+def lookup(values, path):
+    """A point of a model document by the contract's path: "W", "PFWInj.PF",
+    "Crv[1].Pt[0].V" (occurrences from 0). KeyError or IndexError when absent."""
+    cur = values
+    for part in path.split("."):
+        name, _, index = part.partition("[")
+        cur = cur[name]
+        if index:
+            cur = cur[int(index.rstrip("]"))]
+    return cur
+
+
+def point(doc, model, name, key="values"):
+    return lookup(next(m for m in doc["result"]["models"] if m["id"] == model)[key], name)
+
+
+def scaled_expectations(check):
+    """scaled:<model>.<path>=<number>,... as [(model, path, number)]."""
+    out = []
+    for item in check.removeprefix("scaled:").split(","):
+        where, _, value = item.partition("=")
+        model, _, path = where.partition(".")
+        out.append((int(model), path, float(value)))
+    return out
 
 
 def flag(args, name):
@@ -189,7 +211,7 @@ def smoke(adapter, image):
 
     def unsupported():
         # An operation the adapter does not declare is a usage error, never a fake success.
-        for op in ("scan", "write"):
+        for op in ("scan", "write", "write-group"):
             if run.has_operation(adapter, op):
                 continue
             code = run.run(adapter, "client", op, "--host", "x", "--model", "1", "--point", "Mn", "--value", "1").returncode
@@ -247,7 +269,7 @@ def device_case(run, client, server, fx_name, operation, args, check):
     unit = [] if "--unit-id" in args else ["--unit-id", str(fx["unitId"])]
     code, doc, err = run.client(client, operation, "--host", host, *unit, *args)
     if check == "fixture":
-        if code != 0:
+        if code != 0 or not doc:
             return f"exit {code}: {doc} {err}"
         res = doc["result"]
         if res["baseAddress"] != fx["baseAddress"]:
@@ -262,18 +284,28 @@ def device_case(run, client, server, fx_name, operation, args, check):
         return None
     if check == "refused":
         return None if code != 0 and doc and not doc["ok"] else f"exit {code}: {doc}"
+    if check.startswith("scaled:"):
+        # Engineering values: the raw value times 10 to the power of its
+        # scale factor, nested groups taking theirs from the model's top level.
+        if code != 0 or not doc:
+            return f"exit {code}: {doc} {err}"
+        for model, path, want in scaled_expectations(check):
+            got = point(doc, model, path, "scaled")
+            if not isinstance(got, (int, float)) or abs(got - want) > abs(want) * 1e-9 + 1e-12:
+                return f"model {model} {path}: scaled {got!r}, want {want}"
+        return None
     model, name, value = flag(args, "--model"), args[args.index("--point") + 1], flag(args, "--value")
     if check == "readback":
-        if code != 0 or doc["result"]["value"] != value:
+        if code != 0 or not doc or doc["result"]["value"] != value:
             return f"exit {code}: {doc} {err}"
         _, doc, _ = run.client(client, "scan", "--host", host, *unit)
         got = point(doc, model, name)
         return None if got == value else f"read back {got}"
     if check == "refused-unchanged":
-        if code != 1 or doc["ok"]:
+        if code != 1 or not doc or doc["ok"]:
             return f"a read-only point was written: exit {code}: {doc}"
         _, doc, _ = run.client(client, "scan", "--host", host, *unit)
-        want = next(m for m in fx["models"] if m["ID"] == model)[name]
+        want = lookup(next(m for m in fx["models"] if m["ID"] == model), name)
         got = point(doc, model, name)
         return None if got == want else f"value changed to {got}"
     raise ValueError(f"unknown check {check}")

@@ -3,8 +3,8 @@
 # The Dockerfiles are the source of truth for a build:
 # scripts/check-versions.sh fails when this file disagrees with them.
 
-interop_version: "0.2.0"
-contract_version: "1.1"        # docs/CONTAINER_CONTRACT.md
+interop_version: "0.3.0"
+contract_version: "1.2"        # docs/CONTAINER_CONTRACT.md
 fixture_schema: "1.0"          # schemas/fixture.schema.json
 
 protocol:
@@ -26,6 +26,23 @@ implementations:
     independent_engine: true
     roles: [server, client]
     published: true
+
+  cbsigma:
+    priority: P1
+    upstream: "cB-Sigma sunspec"
+    repository: "https://github.com/cB-Sigma/sunspec"
+    module: "github.com/cB-Sigma/sunspec"
+    version: "v0.3.0"            # latest tag; the project publishes tags, no GitHub releases
+    revision: "c99cbef0ba8fefb8433663db152f9fdde8c7adb1"
+    license: "Apache-2.0"
+    language: "Go"
+    independent_engine: true
+    roles: [server, client]     # client: cB-Sigma sunspec; device: cB-Sigma sunspec-sim
+    published: true
+    dependencies:
+      sunspec-sim: "github.com/cB-Sigma/sunspec-sim v0.3.0 e407ee734647776195ce40fe6bdbffcb8ee05d6e (Apache-2.0), the device"
+      modbus: "github.com/simonvetter/modbus v1.6.4 (MIT)"
+      serial: "github.com/goburrow/serial v0.1.0 (MIT)"
 
 # OT Fabric's own stack behind the contract, for others to test against
 # (own/go-sunspec/README.md). Not a reference, not in a release or
@@ -54,8 +71,8 @@ base_images:
   golang:
     tag: "1.27.2-trixie"
     digest: "sha256:e58d6f83b3416618d8bcac2b3dde1b7f7e3c4a77d25e88637f8bbae81536c48d"
-    used_by: [otfabric]
+    used_by: [cbsigma, otfabric]
   debian:
     tag: "trixie-slim"
     digest: "sha256:f6b08b09a05725f9431502d3b5714f5c4576e82c1a84fa1debe0c24a7e0c3ec4"
-    used_by: [otfabric]
+    used_by: [cbsigma, otfabric]

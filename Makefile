@@ -30,8 +30,8 @@ RETRY := scripts/retry.sh
 BUILDER ?= sunspec-interop
 
 # Adapters with a published image, in priority order. The self-tests run over
-# all of them; there is one today
-ADAPTERS ?= pysunspec2
+# all of them.
+ADAPTERS ?= pysunspec2 cbsigma
 
 image = $(REGISTRY)/sunspec-interop-$(1)
 

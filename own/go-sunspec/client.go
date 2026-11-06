@@ -15,6 +15,7 @@ import (
 
 	"github.com/otfabric/go-modbus"
 	sunspec "github.com/otfabric/go-sunspec"
+	"github.com/otfabric/go-sunspec/registry"
 )
 
 type clientError struct {
@@ -149,7 +150,11 @@ func scan(ctx context.Context, dev *sunspec.Device) (any, string, error) {
 				entry["name"] = r.Model.Name
 			}
 			if r.Model.Group != nil {
-				entry["values"], entry["scaled"] = groupDoc(r.Model.Group)
+				var meta *registry.GroupMeta
+				if r.Instance.Schema != nil {
+					meta = r.Instance.Schema.Group
+				}
+				entry["values"], entry["scaled"] = groupDoc(r.Model.Group, meta)
 			}
 		}
 		if _, ok := entry["values"]; !ok {
@@ -177,8 +182,10 @@ func kindOf(err error) string {
 }
 
 // groupDoc gives the raw and the scaled values of a group instance by point
-// name, nested instances as lists; a point not implemented is null.
-func groupDoc(g *sunspec.DecodedGroup) (map[string]any, map[string]any) {
+// name; a point not implemented is null. A nested group that the schema
+// (meta, when known) says occurs once is an object, any other a list of its
+// instances.
+func groupDoc(g *sunspec.DecodedGroup, meta *registry.GroupMeta) (map[string]any, map[string]any) {
 	raw, scaled := map[string]any{}, map[string]any{}
 	for _, p := range g.Points {
 		if !p.Implemented {
@@ -195,12 +202,30 @@ func groupDoc(g *sunspec.DecodedGroup) (map[string]any, map[string]any) {
 		}
 	}
 	for _, c := range g.Groups {
-		r, s := groupDoc(c)
+		cm := childMeta(meta, c.Name)
+		r, s := groupDoc(c, cm)
+		if cm != nil && cm.Count == 1 && cm.CountPoint == "" {
+			raw[c.Name], scaled[c.Name] = r, s
+			continue
+		}
 		rl, _ := raw[c.Name].([]any)
 		sl, _ := scaled[c.Name].([]any)
 		raw[c.Name], scaled[c.Name] = append(rl, r), append(sl, s)
 	}
 	return raw, scaled
+}
+
+// childMeta is the schema of the nested group name, or nil.
+func childMeta(meta *registry.GroupMeta, name string) *registry.GroupMeta {
+	if meta == nil {
+		return nil
+	}
+	for _, c := range meta.Groups {
+		if c.Name == name {
+			return c
+		}
+	}
+	return nil
 }
 
 // sameAsInteger is true when raw is an integer whose float64 is f: the scale

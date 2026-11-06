@@ -22,7 +22,8 @@
     "operation": {
       "enum": [
         "scan",
-        "write"
+        "write",
+        "write-group"
       ]
     },
     "host": {

@@ -4,15 +4,16 @@
 [![CI Status](https://github.com/otfabric/sunspec-interop/actions/workflows/ci.yml/badge.svg)](https://github.com/otfabric/sunspec-interop/actions/workflows/ci.yml)
 [![Latest Release](https://img.shields.io/github/v/release/otfabric/sunspec-interop?label=release)](https://github.com/otfabric/sunspec-interop/releases/latest)
 
-An independent SunSpec implementation in a container, behind a documented command-line contract, with deterministic fixtures. Protocol libraries use it as an oracle: the SunSpec Alliance's [pysunspec2](https://github.com/sunspec/pysunspec2) reads what a library serves, and serves what a library reads.
+Independent SunSpec implementations in containers, behind one documented command-line contract, with deterministic fixtures. Protocol libraries use them as oracles: the SunSpec Alliance's [pysunspec2](https://github.com/sunspec/pysunspec2) and cB-Sigma's Go stack ([sunspec](https://github.com/cB-Sigma/sunspec) and [sunspec-sim](https://github.com/cB-Sigma/sunspec-sim)) read what a library serves, and serve what a library reads.
 
 This is test equipment. It is not a SunSpec implementation of its own, and a pass here is not SunSpec certification.
 
 | Image | Stack | Roles |
 |-------|-------|-------|
 | `ghcr.io/otfabric/sunspec-interop-pysunspec2` | pysunspec2 1.3.7 (Python) | device, client |
+| `ghcr.io/otfabric/sunspec-interop-cbsigma` | cB-Sigma sunspec v0.3.0 (client) and sunspec-sim v0.3.0 (device), Go | device, client |
 
-pysunspec2 has no Modbus server. In the device role pysunspec2 encodes the register map from a fixture, and a small Modbus TCP layer of the adapter serves those registers. The SunSpec encoding is pysunspec2's; the transport is not, and is not what is under test ([docs/CAPABILITIES.md](docs/CAPABILITIES.md)).
+pysunspec2 has no Modbus server. In the device role pysunspec2 encodes the register map from a fixture, and a small Modbus TCP layer of the adapter serves those registers. The SunSpec encoding is pysunspec2's; the transport is not, and is not what is under test ([docs/CAPABILITIES.md](docs/CAPABILITIES.md)). The cbsigma image is cB-Sigma's code on both sides, transport included.
 
 ## OT Fabric's own stack
 
