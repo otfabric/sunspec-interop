@@ -23,4 +23,6 @@ The own-stack image is built apart: `make -f own/go-sunspec/Makefile image smoke
 2. `make ci`.
 3. Record the new version in [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md), [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [RELEASE.md](RELEASE.md).
 
-The **Upstream** workflow checks the pin and the base image every day and self-tests a newer release as a candidate (`make candidate-pysunspec2 CANDIDATE_VERSION=<version>`).
+The **Upstream** workflow checks the pins and the base images every day and self-tests a newer release as a candidate (`make candidate-pysunspec2 CANDIDATE_VERSION=<version>`, `make candidate-cbsigma CANDIDATE_VERSION=<tag> CANDIDATE_SHA=<commit>`; cB-Sigma has tags, no releases).
+
+To move cbsigma's pins, change `adapters/cbsigma/go.mod` (`go get github.com/cB-Sigma/sunspec@<tag> github.com/cB-Sigma/sunspec-sim@<tag>`), the `ARG`s of its Dockerfile (versions and tag commits) and `versions.yaml`; `scripts/check-versions.sh` checks that they agree.

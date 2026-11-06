@@ -28,6 +28,23 @@ Built by hand from `own/go-sunspec/` (not part of a release); every module's lic
 | Adapter | this repository, `own/go-sunspec/` | MIT | https://github.com/otfabric/sunspec-interop |
 | Base system | Debian trixie-slim | various; see `/usr/share/doc/*/copyright` in the image | https://www.debian.org |
 
+## Image `sunspec-interop-cbsigma`
+
+| Component | Version | Licence | Source |
+|-----------|---------|---------|--------|
+| cB-Sigma sunspec (Abhinav Gautam), the client | v0.3.0, commit `c99cbef0ba8fefb8433663db152f9fdde8c7adb1` | Apache-2.0 | https://github.com/cB-Sigma/sunspec |
+| cB-Sigma sunspec-sim (Abhinav Gautam), the device | v0.3.0, commit `e407ee734647776195ce40fe6bdbffcb8ee05d6e` | Apache-2.0 | https://github.com/cB-Sigma/sunspec-sim |
+| simonvetter/modbus, linked by cB-Sigma sunspec | v1.6.4 | MIT | https://github.com/simonvetter/modbus |
+| goburrow/serial, linked by cB-Sigma sunspec | v0.1.0 | MIT | https://github.com/goburrow/serial |
+| Go standard library and runtime | 1.27.2 | BSD-3-Clause | https://go.dev |
+| Adapter | this repository, `adapters/cbsigma/` | MIT | https://github.com/otfabric/sunspec-interop |
+| Base system | Debian trixie-slim | various; see `/usr/share/doc/*/copyright` in the image | https://www.debian.org |
+
+Licences and notices in the image: `/licenses/sunspec/` and `/licenses/sunspec-sim/`
+(`LICENSE`, `NOTICE`), `/licenses/modbus/LICENSE.txt`, `/licenses/serial/LICENSE`,
+`/licenses/go/LICENSE`. cB-Sigma sunspec embeds the SunSpec model definitions it
+uses. Both cB-Sigma modules are published as git tags, without GitHub releases.
+
 ## Image `sunspec-interop-pysunspec2`
 
 | Component | Version | Licence | Source |

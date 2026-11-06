@@ -70,7 +70,8 @@
       "items": {
         "enum": [
           "scan",
-          "write"
+          "write",
+          "write-group"
         ]
       }
     },

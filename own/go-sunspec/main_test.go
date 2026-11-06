@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	sunspec "github.com/otfabric/go-sunspec"
+	"github.com/otfabric/go-sunspec/registry"
 )
 
 func TestShift(t *testing.T) {
@@ -78,7 +79,7 @@ func TestFixtureRawValuesAreServed(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		raw, _ := groupDoc(dm.Group)
+		raw, _ := groupDoc(dm.Group, nil)
 		for name, want := range m {
 			if name == "module" {
 				continue
@@ -89,7 +90,7 @@ func TestFixtureRawValuesAreServed(t *testing.T) {
 		}
 	}
 	dm, _ := srv.Model(2)
-	raw, _ := groupDoc(dm.Group)
+	raw, _ := groupDoc(dm.Group, registry.ByID(160).Group)
 	modules, _ := raw["module"].([]any)
 	if len(modules) != 2 || fmt.Sprint(modules[1].(map[string]any)["DCA"]) != "999" || fmt.Sprint(modules[0].(map[string]any)["DCV"]) != "4005" {
 		t.Errorf("module group: %v", raw["module"])
@@ -136,7 +137,7 @@ func TestScaledKeepsExactIntegers(t *testing.T) {
 	raw, scaled := groupDoc(&sunspec.DecodedGroup{Points: []sunspec.DecodedPoint{
 		{Name: "TotWhInj", Type: "acc64", RawValue: uint64(18446744073709551), ScaledValue: &big, SFRawValue: &sf, Implemented: true},
 		{Name: "W", Type: "int16", RawValue: int16(-30), ScaledValue: ptr(-300.0), Implemented: true},
-	}})
+	}}, nil)
 	if scaled["TotWhInj"] != uint64(18446744073709551) || raw["TotWhInj"] != uint64(18446744073709551) {
 		t.Errorf("TotWhInj: raw %v, scaled %v", raw["TotWhInj"], scaled["TotWhInj"])
 	}
@@ -188,5 +189,48 @@ func TestReadFixtureLimits(t *testing.T) {
 	}
 	if _, err := u8(256); err == nil {
 		t.Error("u8(256) has no error")
+	}
+}
+
+// A group the schema says occurs once is an object in the scan document, as
+// the fixture writes it; repeating groups, nested ones too, are lists.
+func TestGroupDocShapes(t *testing.T) {
+	const doc = `{"name": "shapes", "unitId": 1, "baseAddress": 40000, "models": [
+	 {"ID": 1, "Mn": "OT Fabric", "Md": "Shapes", "SN": "SN-1"},
+	 {"ID": 704, "PF_SF": -3, "PFWInj": {"PF": 950, "Ext": 1}},
+	 {"ID": 705, "NPt": 4, "NCrv": 2, "V_SF": -1, "DeptRef_SF": 0, "RspTms_SF": 0, "Crv": [
+	  {"ActPt": 4, "Pt": [{"V": 920}, {"V": 980}, {"V": 1020}, {"V": 1080}]},
+	  {"ActPt": 3, "Pt": [{"V": 900}, {"V": 1000}, {"V": 1100}, {}]}]}
+	]}`
+	dir := filepath.Join(t.TempDir(), "shapes")
+	if err := os.Mkdir(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(dir, "fixture.json")
+	if err := os.WriteFile(path, []byte(doc), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	fx, err := loadFixture(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	srv, err := fx.server()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctl, _ := srv.Model(1)
+	raw, _ := groupDoc(ctl.Group, registry.ByID(704).Group)
+	if pf, ok := raw["PFWInj"].(map[string]any); !ok || fmt.Sprint(pf["PF"]) != "950" {
+		t.Errorf("PFWInj: %#v", raw["PFWInj"])
+	}
+	vv, _ := srv.Model(2)
+	raw, _ = groupDoc(vv.Group, registry.ByID(705).Group)
+	curves, ok := raw["Crv"].([]any)
+	if !ok || len(curves) != 2 {
+		t.Fatalf("Crv: %#v", raw["Crv"])
+	}
+	points, ok := curves[1].(map[string]any)["Pt"].([]any)
+	if !ok || len(points) != 4 || fmt.Sprint(points[2].(map[string]any)["V"]) != "1100" {
+		t.Errorf("Crv[1].Pt: %#v", curves[1])
 	}
 }

@@ -7,10 +7,24 @@
 #   4  flags of the operation, or "-"; --host and the fixture's --unit-id are added
 #   5  check: fixture (every model and raw value as the fixture sets it),
 #      readback (the write lands and a new scan reads it), refused-unchanged
-#      (exit 1, and a new scan reads the fixture's value), refused (ok false)
+#      (exit 1, and a new scan reads the fixture's value), refused (ok false),
+#      scaled:<model>.<point>=<number>,... (engineering values of the scan)
+# A point of a group is a path: PFWInj.PF (a group that occurs once),
+# Crv[1].Pt[0].V (occurrences from 0); write-group writes one.
 device.scan.baseline	baseline	scan	-	fixture
 device.scan.edge	edge	scan	-	fixture
 device.scan.altbase	altbase	scan	-	fixture
 device.write.read-write-point	baseline	write	--model 123 --point WMaxLimPct --value 750	readback
 device.write.read-only-point	baseline	write	--model 103 --point W --value 1	refused-unchanged
 device.unit-id.other-unit	baseline	scan	--unit-id 9	refused
+device.scan.der	der	scan	-	fixture
+device.scale.edge	edge	scan	-	scaled:101.A=65.534,101.PhVphA=2305000,101.Hz=50,701.Hz=60.01,701.W=-9800
+device.scale.der	der	scan	-	scaled:701.Hz=50.01,701.A=11.03,702.WMax=10000,704.WSetPct=-25,704.PFWInj.PF=0.95,705.Crv[1].Pt[0].V=90,705.Crv[0].Pt[3].Var=-30
+der.write.capacity-setting	der	write	--model 702 --point WMax --value 900	readback
+der.write.signed-setpoint	der	write	--model 704 --point WSetPct --value -500	readback
+der.write.adopt-request	der	write	--model 705 --point AdptCrvReq --value 2	readback
+der.write.read-only-status	der	write	--model 705 --point AdptCrvRslt --value 2	refused-unchanged
+der.write-group.control-group	der	write-group	--model 704 --point PFWInj.PF --value 970	readback
+der.write-group.curve-point	der	write-group	--model 705 --point Crv[1].Pt[2].V --value 1090	readback
+der.write-group.curve-setting	der	write-group	--model 705 --point Crv[1].ActPt --value 4	readback
+der.write-group.read-only-curve-flag	der	write-group	--model 705 --point Crv[0].ReadOnly --value 0	refused-unchanged

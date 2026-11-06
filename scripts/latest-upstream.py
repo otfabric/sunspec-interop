@@ -50,7 +50,17 @@ def pysunspec2():
     return newest(live), "", "PyPI"
 
 
-RESOLVERS = {"pysunspec2": pysunspec2}
+def cbsigma():
+    # cB-Sigma publishes git tags, no GitHub releases. The device module,
+    # sunspec-sim, is tagged with the library and stays at its pin in a
+    # candidate build (adapters/cbsigma/Dockerfile, SIM_VERSION).
+    tags = json.loads(fetch("https://api.github.com/repos/cB-Sigma/sunspec/tags?per_page=100"))
+    latest = newest([t["name"] for t in tags])
+    sha = next(t["commit"]["sha"] for t in tags if t["name"] == latest)
+    return latest, sha, "GitHub tags of cB-Sigma/sunspec"
+
+
+RESOLVERS = {"pysunspec2": pysunspec2, "cbsigma": cbsigma}
 
 
 def main():

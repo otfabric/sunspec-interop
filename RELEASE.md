@@ -3,6 +3,29 @@
 The `sunspec-interop-otfabric` image is not part of these releases. It has its own
 manual workflow and no releases (`own/go-sunspec/README.md`).
 
+## v0.3.0
+
+**Date:** 2026-11-06
+**Previous release:** v0.2.0
+
+### Added
+
+- Image `sunspec-interop-cbsigma`: cB-Sigma's Go SunSpec stack as a second independent reference. The client is [cB-Sigma sunspec](https://github.com/cB-Sigma/sunspec) v0.3.0 (commit `c99cbef`), the device [cB-Sigma sunspec-sim](https://github.com/cB-Sigma/sunspec-sim) v0.3.0 (commit `e407ee7`), both Apache-2.0 and pinned by tag (the project publishes tags, no GitHub releases). `adapters/cbsigma/go.mod` is the source of truth for the build; `scripts/check-versions.sh` checks it against the Dockerfile and versions.yaml.
+- Container contract 1.2: the client operation `write-group` writes a point of a group, named by its path (`PFWInj.PF`, `Crv[1].Pt[0].V`). pysunspec2 and cbsigma declare it; the otfabric image does not (go-sunspec writes top-level points only), so its cases are `unsupported` for that client.
+- Fixture `der` (unit 3, base 40000): IEEE 1547-2018 models 701, 702, 704 (groups that occur once) and 705 (a volt-var curve set: repeating curves, each with repeating points counted by a top-level point).
+- Cases: `device.scan.der`; `device.scale.edge` and `device.scale.der` check engineering values (scale factors from the top level applied in nested groups); `der.write.*` write DER settings and a signed setpoint and refuse a read-only status; `der.write-group.*` write a control group point, a curve point and a curve setting, and refuse the read-only curve flag.
+- The daily upstream check also follows cB-Sigma sunspec's tags.
+
+### Changed
+
+- The scan document holds a group that occurs once as an object (the contract said nothing about it; pysunspec2 already did so).
+- The own-stack workflow and `own/go-sunspec/Makefile` test the otfabric image against both references.
+- `own/go-sunspec/` (not in this release): contract 1.2 without `write-group`; its scan document holds a group that occurs once as an object, where it held a one-element list (`device.scan.der` caught it; go-sunspec decoded the group right).
+- The self-test records a client that prints no document as a failure instead of stopping the run.
+
+The image `sunspec-interop-pysunspec2` is still pysunspec2 1.3.7; its adapter adds `write-group`.
+
+---
 ## v0.2.0
 
 **Date:** 2026-11-06

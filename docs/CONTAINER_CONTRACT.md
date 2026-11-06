@@ -1,6 +1,6 @@
 # Container contract
 
-Version: **1.1** (`contract_version` in [versions.yaml](../versions.yaml))
+Version: **1.2** (`contract_version` in [versions.yaml](../versions.yaml))
 
 Consumers depend on this document, not on the adapter's source. A change that breaks it bumps the major version; an addition bumps the minor one. Documents carry `schemaVersion` `"1.0"`, which changes only with the major version.
 
@@ -25,6 +25,8 @@ sunspec-interop server [--fixture PATH] [--bind-address ADDR] [--port N] [--read
 sunspec-interop client scan  --host HOST [--port N] [--unit-id N] [--timeout SECONDS]
 sunspec-interop client write --host HOST [--port N] [--unit-id N] [--timeout SECONDS]
                              --model ID [--instance N] --point NAME --value VALUE
+sunspec-interop client write-group --host HOST [--port N] [--unit-id N] [--timeout SECONDS]
+                             --model ID [--instance N] --point PATH --value VALUE
 sunspec-interop print-capabilities
 sunspec-interop print-fixture [NAME]
 sunspec-interop print-registers [NAME]
@@ -50,13 +52,15 @@ Prints one document on standard output ([schema](../schemas/client-result.schema
 | `result` | Present when `ok` is true |
 | `error` | `kind` (`connect`, `failed`) and `message`, present when `ok` is false |
 
-`scan` finds the base address among 40000, 0 and 50000, in that order, and reads every model. `result` holds `baseAddress` and `models`, one entry per model: `id`, `name`, `address`, `length`, `values` (raw) and `scaled`. Both are the point names of the model, with repeating groups as lists of objects. A not-implemented point is `null`. `error` appears in a model the client's stack flagged.
+`scan` finds the base address among 40000, 0 and 50000, in that order, and reads every model. `result` holds `baseAddress` and `models`, one entry per model: `id`, `name`, `address`, `length`, `values` (raw) and `scaled`. Both are the point names of the model, with a group that occurs once as an object and repeating groups as lists of objects. A not-implemented point is `null`. `error` appears in a model the client's stack flagged.
 
-`write` scans, writes one point in raw form and reads it back. `result` holds `model`, `point` and the `value` read back.
+`write` scans, writes one top-level point in raw form and reads it back. `result` holds `model`, `point` and the `value` read back.
+
+`write-group` (since 1.2) does the same for a point of a group. `PATH` names it as the scan document nests it: `PFWInj.PF` for a group that occurs once, `Crv[1].Pt[0].V` for repeating groups, occurrences counted from 0. `result.point` is the path as given.
 
 ## `print-capabilities`
 
-The capability document ([schema](../schemas/capabilities.schema.json)). Since 1.1, `upstream.independentEngine` says whether the stack is an independent implementation; it is `false` for OT Fabric's own stack. A client operation the document does not list is a usage error.
+The capability document ([schema](../schemas/capabilities.schema.json)). Since 1.1, `upstream.independentEngine` says whether the stack is an independent implementation; it is `false` for OT Fabric's own stack. A client operation the document does not list is a usage error. 1.2 adds the operation `write-group`; an image of an earlier contract does not list it, and its cases are "unsupported".
 
 ## `print-fixture`, `print-registers`
 

@@ -24,3 +24,9 @@ services:
     image: ghcr.io/otfabric/sunspec-interop-pysunspec2:${SUNSPEC_INTEROP_VERSION:-dev}
     ports:
       - "127.0.0.1:1502:1502"
+
+  cbsigma:
+    <<: *server
+    image: ghcr.io/otfabric/sunspec-interop-cbsigma:${SUNSPEC_INTEROP_VERSION:-dev}
+    ports:
+      - "127.0.0.1:1503:1502"

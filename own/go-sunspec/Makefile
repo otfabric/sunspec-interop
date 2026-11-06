@@ -7,7 +7,7 @@
 IMAGE ?= ghcr.io/otfabric/sunspec-interop-otfabric:dev
 # The harness release of the reference images to test against.
 VERSION ?= $(shell git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -1)
-REFERENCES ?= pysunspec2
+REFERENCES ?= pysunspec2 cbsigma
 BASE_REGISTRY ?= docker.io/library
 
 # The latest go-sunspec release, as the workflow builds it.
