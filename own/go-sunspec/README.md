@@ -28,7 +28,7 @@ docker run -d --name go-sunspec -p 127.0.0.1:1502:1502 ghcr.io/otfabric/sunspec-
 until docker exec go-sunspec test -f /run/sunspec-interop/ready; do sleep 0.1; done
 ```
 
-`<tag>` is a go-sunspec version such as `v0.9.0`, or `latest`, the newest one
+`<tag>` is a go-sunspec version such as `v0.10.0`, or `latest`, the newest one
 published. A rebuild of a version replaces its tag, so pin the digest if you need
 an exact build. The digest is in the summary of the
 [workflow run](https://github.com/otfabric/sunspec-interop/actions/workflows/own-go-sunspec.yml),
