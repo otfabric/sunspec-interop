@@ -7,4 +7,4 @@ require (
 	github.com/otfabric/go-sunspec v0.10.3
 )
 
-require github.com/otfabric/go-serial v0.3.0 // indirect
+require github.com/otfabric/go-serial v0.4.0 // indirect
