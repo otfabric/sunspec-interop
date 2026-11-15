@@ -6,6 +6,9 @@ adapters/*/obj/
 adapters/*/__pycache__/
 reports/
 scripts/__pycache__/
+# A self-test run without REPORT_DIR writes its results.json here
+# (scripts/selftest.py); the evidence of a release is its own run's.
+/results.json
 
 # Editors and OS
 .vscode/

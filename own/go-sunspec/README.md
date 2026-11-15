@@ -91,9 +91,14 @@ make -f own/go-sunspec/Makefile image smoke interop VERSION=dev  # against refer
 - **Client write** (go-sunspec v0.10.0 or later): go-sunspec's
   `Device.WritePoint`. The contract gives the raw value; go-sunspec takes the
   engineering value of a scaled point, so the adapter hands it raw × 10^sf with
-  the scale factor the device reports, as for the fixtures. go-sunspec reads the
-  model, encodes the point, writes only its registers with FC 16 and reads it
-  back; `value` is the raw value read back. A point that is not read-write is
+  the scale factor the device reports, as for the fixtures. Where go-sunspec
+  reads no usable scale factor with the point (the scale factor is not
+  implemented or outside -10..10, or the point holds its not-implemented
+  value), the adapter hands it the raw value as the point's registers
+  (`[]uint16`, encoded by go-sunspec's `EncodeModel`), which go-sunspec writes
+  as they are; a raw value the point's type cannot hold is refused, exit 1.
+  go-sunspec reads the model, encodes the point, writes only its registers
+  with FC 16 and reads it back; `value` is the raw value read back. A point that is not read-write is
   refused by go-sunspec before anything is sent (`ErrPointNotWritable`), exit 1.
 - `print-registers` reads the served map back through the `Server`'s own
   request handler.

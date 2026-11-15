@@ -19,10 +19,10 @@ The own-stack image is built apart: `make -f own/go-sunspec/Makefile image smoke
 
 ## Moving the upstream pin
 
-1. Change `ARG UPSTREAM_VERSION` in the Dockerfile, `adapters/pysunspec2/requirements.txt` and `versions.yaml`; `scripts/check-versions.sh` must pass.
+1. Change `ARG UPSTREAM_VERSION` in the Dockerfile, `adapters/pysunspec2/requirements.txt` and `versions.yaml` (`version`, `wheel_sha256`, the bundled pyserial, and `revision`, the commit of the release's tag); `scripts/check-versions.sh` must pass.
 2. `make ci`.
 3. Record the new version in [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md), [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [RELEASE.md](RELEASE.md).
 
 The **Upstream** workflow checks the pins and the base images every day and self-tests a newer release as a candidate (`make candidate-pysunspec2 CANDIDATE_VERSION=<version>`, `make candidate-cbsigma CANDIDATE_VERSION=<tag> CANDIDATE_SHA=<commit>`; cB-Sigma has tags, no releases).
 
-To move cbsigma's pins, change `adapters/cbsigma/go.mod` (`go get github.com/cB-Sigma/sunspec@<tag> github.com/cB-Sigma/sunspec-sim@<tag>`), the `ARG`s of its Dockerfile (versions and tag commits) and `versions.yaml`; `scripts/check-versions.sh` checks that they agree.
+To move cbsigma's pins, change `adapters/cbsigma/go.mod` (`go get github.com/cB-Sigma/sunspec@<tag> github.com/cB-Sigma/sunspec-sim@<tag>`), the `ARG`s of its Dockerfile (versions and tag commits) and `versions.yaml`; `scripts/check-versions.sh` checks that they agree, and that `adapters/cbsigma/go.sum` (its `lock`) has the version.

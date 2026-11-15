@@ -114,7 +114,8 @@ jobs:
             ### To update
 
             - **Library:** move `ARG UPSTREAM_VERSION` in
-              `adapters/<adapter>/Dockerfile`, the adapter's lock file (`requirements.txt`) and `versions.yaml`. Reproduce a
+              `adapters/<adapter>/Dockerfile`, the adapter's lock file (`requirements.txt`) and `versions.yaml`
+              (with the `revision` of the new tag). Reproduce a
               candidate with `make candidate-<adapter> CANDIDATE_VERSION=<version>`; a `failure`
               needs the self-test log of the run first. A *known bug ... did not reproduce* is
               good news: drop it from `tests/known-bugs.tsv`.
