@@ -4,7 +4,7 @@ go 1.26.0
 
 require (
 	github.com/otfabric/go-modbus v1.16.1
-	github.com/otfabric/go-sunspec v0.11.1
+	github.com/otfabric/go-sunspec v0.12.0
 )
 
 require github.com/otfabric/go-serial v0.4.1 // indirect
