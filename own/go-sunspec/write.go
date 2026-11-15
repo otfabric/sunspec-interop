@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	sunspec "github.com/otfabric/go-sunspec"
+	"github.com/otfabric/go-sunspec/registry"
 )
 
 // writeRequest is what client write was asked to do.
@@ -63,7 +64,11 @@ func rawValue(text string) any {
 // write writes one point in raw form with go-sunspec's Device.WritePoint and
 // reports the raw value the device holds afterwards. go-sunspec takes the
 // engineering value of a scaled point, so a raw number becomes raw * 10^sf
-// with the scale factor the device reports, as for the fixtures.
+// with the scale factor the device reports, as for the fixtures. When
+// go-sunspec reads no usable scale factor with the point (the scale factor is
+// not implemented or outside -10..10, or the point holds its not-implemented
+// value), the raw number is given as the point's registers, which go-sunspec
+// writes as they are.
 func write(ctx context.Context, dev *sunspec.Device, w writeRequest) (any, string, error) {
 	insts := dev.ModelsByID(w.model)
 	if w.instance >= len(insts) {
@@ -78,6 +83,12 @@ func write(ctx context.Context, dev *sunspec.Device, w writeRequest) (any, strin
 		}
 		if sf, ok := exponent(inst, p); ok && sf != 0 && sf >= -10 && sf <= 10 {
 			value = shift(n, sf)
+		} else if pm := inst.Schema.Group.Point(w.point); pm != nil && pm.SF != "" {
+			regs, err := pointRegisters(inst.Schema, pm, n)
+			if err != nil {
+				return nil, "failed", err
+			}
+			value = regs
 		}
 	}
 	p, err := dev.WritePoint(ctx, inst, w.point, value)
@@ -106,4 +117,18 @@ func exponent(inst sunspec.ModelInstance, p *sunspec.DecodedPoint) (int, bool) {
 		}
 	}
 	return 0, false
+}
+
+// pointRegisters is the raw number n as the registers of the top-level point
+// pm, encoded by go-sunspec: a model whose only value is that point, with no
+// scale factor set, stores it unscaled (EncodeModel).
+func pointRegisters(schema *registry.ModelMeta, pm *registry.PointMeta, n json.Number) ([]uint16, error) {
+	regs, err := sunspec.EncodeModel(schema, (&sunspec.Values{}).Set(pm.Name, n))
+	if err != nil {
+		return nil, err
+	}
+	if pm.Offset < 0 || pm.Size <= 0 || pm.Offset+pm.Size > len(regs) {
+		return nil, fmt.Errorf("%w: %s at offset %d, size %d, of %d registers", sunspec.ErrEncode, pm.Name, pm.Offset, pm.Size, len(regs))
+	}
+	return regs[pm.Offset : pm.Offset+pm.Size], nil
 }

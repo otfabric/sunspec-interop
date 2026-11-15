@@ -2,7 +2,7 @@
 
 | Command | What it runs | Needs |
 |---------|--------------|-------|
-| `make validate` | versions.yaml against the Dockerfile, RELEASE.md, fixtures against the schema, unit tests of the result scripts | Python 3 |
+| `make validate` | versions.yaml against the Dockerfiles and lock files, RELEASE.md, fixtures against the schema, unit tests of the result scripts and of `scripts/check-versions.sh` | Python 3 |
 | `make lint` | Shellcheck | shellcheck or Docker |
 | `make smoke` | `scripts/smoke.sh <adapter>`: the contract of each image on its own | Docker, built images |
 | `make interop` | `scripts/interop.sh <adapters>`: every case of `tests/cases.tsv` for every client against every server | Docker, built images |

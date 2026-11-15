@@ -3,6 +3,22 @@
 The `sunspec-interop-otfabric` image is not part of these releases. It has its own
 manual workflow and no releases (`own/go-sunspec/README.md`).
 
+## v0.3.1
+
+**Date:** 2026-11-15
+**Previous release:** v0.3.0
+
+### Changed
+
+- `versions.yaml` records pysunspec2's `revision`, the commit of its tag v1.3.7, and for pysunspec2 and cbsigma the `lock`, the file whose hashes the build checks (`adapters/pysunspec2/requirements.txt`, `adapters/cbsigma/go.sum`). `scripts/check-versions.sh` also checks that every implementation has a revision and a lock that pins its version, that the wheel hashes of `requirements.txt` are the `wheel_sha256` and the bundled pyserial of versions.yaml, and that the base images of `own/go-sunspec/Dockerfile` are the `base_images` used by `otfabric`. `scripts/test_check_versions.py` tests it (`make validate`). `manifest.json` does not change.
+- The workflows and the Makefile install jsonschema 4.26.0, not the latest release.
+- The `results.json` of a local v0.2.0 run is no longer in the repository, and a self-test run without `REPORT_DIR` leaves its `results.json` untracked (`.gitignore`).
+- AGENTS.md names cB-Sigma as the second reference.
+- `own/go-sunspec/` (not in this release): `client write` writes the raw value of a scaled point also when go-sunspec reads no usable scale factor with it (the scale factor is not implemented or outside -10..10, or the point holds its not-implemented value). It gives the value as the point's registers, which go-sunspec writes as they are; with go-sunspec v0.11.0 and later the write ended with exit 1 there. A raw value the point's type cannot hold is refused, exit 1, as before. `TestWriteRaw` covers it and runs in the image build.
+
+The images are built from the pins of v0.3.0: pysunspec2 1.3.7, cB-Sigma sunspec v0.3.0 and sunspec-sim v0.3.0, on the same base images.
+
+---
 ## v0.3.0
 
 **Date:** 2026-11-06
