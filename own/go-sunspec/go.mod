@@ -3,7 +3,7 @@ module github.com/otfabric/sunspec-interop/own/go-sunspec
 go 1.26.0
 
 require (
-	github.com/otfabric/go-modbus v1.17.0
+	github.com/otfabric/go-modbus v1.22.0
 	github.com/otfabric/go-sunspec v0.12.2
 )
 
